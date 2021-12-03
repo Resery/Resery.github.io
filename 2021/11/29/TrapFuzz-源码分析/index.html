@@ -161,7 +161,10 @@ MathJax = {
       <div class="markdown-body">
         <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在 21 年 8 月时看了 HITB 中的一篇议题，议题中介绍了一个基于断点的 Fuzz ，当时就想分析一下，因为中间有很多事所以一直到现在 (11 月) 都没有来做这件事，最近准备将它提上日程。</p>
 <p>从这篇源码分析文章开始，我会改变自己源码分析类文章的风格，之前都是贴一段代码然后写这段代码的功能，在这种模式下如果不经常看基本记不住代码的功能，并且我也想在分析源码的过程中学习一下如何写代码，也就是为什么人家要这样写。所以之后写的文章我会先总结一遍功能，然后根据功能指出代码应该如何写，以及为什么这么写。</p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2>
+<h2 id="简述"><a href="#简述" class="headerlink" title="简述"></a>简述</h2><p>简述一下 TrapFuzz 的逻辑，如果之前有阅读过其他 Fuzz 源码的经历的话，那么很容易就可以理解什么是边缘覆盖率，所谓的边缘覆盖率其实就是我此次测试用例在程序中能触发的所有代码与总代码的比值，边缘覆盖率越高则我们可以测试的范围也就会变得更广。TrapFuzz 同样也是一种边缘覆盖类型的 Fuzz ，为了突出它的特点，我们以 AFL 作为例子用来与 TrapFuzz 进行对比，AFL 同样也是边缘覆盖类型的 Fuzz ，但是相比于 TrapFuzz 它的处理粒度更细，AFL 是统计指令级的覆盖率，而 TrapFuzz 是统计基本块级的覆盖率；并且 AFL 在闭源软件上需要使用 qemu 来辅助 fuzz 速度很慢而且也容易出错，但是 TrapFuzz 可以很好的支持闭源软件；这两款 Fuzzer 的目标类型也不同，AFL 在对小型的程序或软件进行 fuzz 时速度很快，但是 TrapFuzz 在 fuzz 小型程序或软件时速度相比于 AFL 慢很多。</p>
+<h2 id="基本原理"><a href="#基本原理" class="headerlink" title="基本原理"></a>基本原理</h2><p>TrapFuzz 主要的创新点在于利用断点来统计覆盖率，虽然这个创新点并不是 TrapFuzz 的作者首次提出，但是 TrapFuzz 的作者应该是首次将这个想法落地应用在了 Fuzz 中。简述一下它统计的原理，他利用 IDA 提供的 API 也就是 IDAPython 脚本找出所有的基本块，IDA 分析基本块的原理也很简单就是来找跳转指令然后再通过分析跳转指令前后的指令来确定一个基本块，确定好所有的基本块之后，把所有基本块的第一条指令全部替换成 0xCC 并且把原有的内容存储起来，这里替换成 0xCC 因为汇编指令 int 3 的机器码就是 0xCC 。在 TrapFuzz 中需要一个调试器，这个调试器可以选择开源的调试器也可以选择自己实现一个简易的调试器，需要调试器的主要原因在于我们需要在程序触发断点，触发断点之后将原本的指令进行恢复，恢复的主要的目的是让程序原本的功能可以继续执行下去，恢复的同时我们也需要记录当前触发的基本块，通过计算所有触发过的基本块与基本块总数的比值得到覆盖率，当然在 TrapFuzz 中还有很多小 trick 来提升速度，后面的源码分析会进行解释。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>……</p>
+
       </div>
       
         <div class="prev-or-next">
@@ -210,7 +213,7 @@ MathJax = {
   <div class="post-catalog hidden" id="catalog">
     <div class="title">Contents</div>
     <div class="catalog-content">
-      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AE%80%E8%BF%B0"><span class="toc-text">简述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86"><span class="toc-text">基本原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol>
     </div>
   </div>
 
